@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+<!-- 
+	private long bId; // 자동증가
+	private String mId; // 게시자 아이디
+	private String bTitle; // 게시글 제목
+	private String bContent; // 게시글 내용
+	private Timestamp bDate; // 게시일시
+	private int bHit; // 게시글읽은 횟수
+	private int bGroup; // 소속본글 bId
+	private int bStep; // 댓글의 게시순서
+	private int bIndent; // 리스트에 댓글의 갯글등 들여쓰기
+-->
+
+<mapper namespace="com.vision.dao.MvcBoardDAO">
+
+	<resultMap id = "result" type = "board">
+		<result property = "bId" column="BID"/> 
+		<result property = "mId" column="MID"/> 
+		<result property = "bTitle" column="BTITLE"/> 
+		<result property = "bContent" column="BCONTENT"/> 
+		<result property = "bDate" column="BDATE"/> 
+		<result property = "bHit" column="BHIT"/> 
+		<result property = "bGroup" column="BGROUP"/> 
+		<result property = "bStep" column="BSTEP"/> 
+		<result property = "bIndent" column="BINDENT"/> 
+	</resultMap>
+	
+	<!--
+	
+	public void write(MvcBoard bean);
+										 // INSERT
+	public ArrayList<MvcBoard> list();
+											 //SELET
+	public MvcBoard contentView(long bId);
+											 // SELECT
+	public void modify(MvcBoard bean);
+											 // UPDATE
+	public void delete(long bId);
+											// DELETE
+	public MvcBoard reply_view(long bId);
+										 // SELECT
+	public void reply(MvcBoard bean);
+												// INSERT
+	// 댓글의 출력순서 재조정 하기												
+	public void replyShape(HashMap<String, Integer> map);
+											 // UPDATE
+	public void upHit(long bId);
+											//UPDATE
+	
+	-->
+	<insert id = "write" parameterType="board" >
+	
+	INSERT INTO MVC_BOARD(BID,MID,BTITLE,BCONTENT,BDATE,BHIT,BGROUP,BSTEP,BINDENT) 
+	VALUES(MVCBOARD_BID_SEQ.NEXTVAL,#{mId},#{bTitle},#{bContent},SYSDATE,0,MVCBOARD_BID_SEQ.CURRVAL,0,0)
+	</insert>
+	
+	<select id="list" resultMap="result">
+	
+	SELECT BID,MID,BTITLE,BCONTENT,BDATE,BHIT,BGROUP,BSTEP,BINDENT
+	FROM MVC_BOARD 
+	ORDER BY BGROUP DESC, BSTEP ASC
+	</select>
+	
+	<!--BID = #{아무거나넣어도상관없음}  -->
+	<select id="contentView" parameterType="long" resultMap="result">
+	
+	SELECT * FROM MVC_BOARD WHERE 
+	BID = #{bid} 
+	
+	</select>
+	
+	<update id="modify" parameterType="board">
+
+	UPDATE MVC_BOARD SET BTITLE=#{bTitle}, BCONTENT=#{bContent}
+	WHERE BID = #{bId}
+	</update>
+	
+	<delete id="delete" parameterType="long">
+		DELETE FROM MVC_BOARD WHERE BID = #{bId}
+	</delete>
+	
+	<select id = "reply_view" parameterType="long" resultMap="result">
+
+		SELECT * FROM MVC_BOARD WHERE BID = #{bid}
+
+	</select>
+	
+	<insert id = "reply" parameterType="board" >
+	
+	INSERT INTO MVC_BOARD(
+		BID,MID,BTITLE,BCONTENT,BDATE,BHIT,BGROUP,BSTEP,BINDENT
+		) VALUES(
+			MVCBOARD_BID_SEQ.NEXTVAL,#{mId},#{bTitle},#{bContent},SYSDATE,0,#{bGroup},#{bStep}+1,#{bIndent}+1
+			)
+	
+	</insert>
+	
+	<update id="replyShape" parameterType="hashMap">
+	<![CDATA[
+	UPDATE MVC_BOARD SET BSTEP=#{bStep}+1
+	WHERE BGROUP= #{bGroup}
+	AND BSTEP > #{bStep}
+	]]>
+	</update>
+	
+	<update id="upHit" parameterType="long">
+	UPDATE MVC_BOARD SET BHIT = BHIT + 1
+	WHERE BID = #{value}
+	</update>
+	
+	
+</mapper>
